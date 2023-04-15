@@ -5,27 +5,15 @@ import matplotlib.pyplot as plt
 # 定义基准长度
 stand_dis = 50 # mm
 dis_pix_ratio = 0
+
+# 用来记录最终数据--每一帧中红色点间的实际长度
 dis_meas = []
-# 绘制轮廓函数
-def draw_contour(contours):
-    cv2.drawContours(image, contours, -1, (0, 0, 0), 5)
-    # 遍历轮廓
-    for contour in contours:
-        # 计算轮廓的外接圆
-        (x, y), radius = cv2.minEnclosingCircle(contour)
-        center = (int(x), int(y))
-        radius = int(radius)
-        
-        # 绘制轮廓的外接圆
-        # cv2.circle(image, center, radius, (0, 255, 0), 2)
-        
-        # 绘制圆心
-        # cv2.circle(image, center, 2, (0, 0, 255), -1)
 
 # 调试阈值用
-def empty(i):
-    pass
+# def empty(i):
+    # pass
 
+# 过滤面积较小的轮廓
 def filtered_contours(contours) :
     # 设置面积阈值
     area_threshold = 500  # 可根据需求调整
@@ -91,7 +79,9 @@ while True:
     # 将图片转换为HSV格式
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    # 定义蓝色的HSV范围
+    ############# 处理蓝色点 ####################
+
+    # 定义蓝色的HSV范围-- 可以用上面的注释的代码调参数
     lower_blue = np.array([44, 63, 86])
     upper_blue = np.array([81, 210, 209])
 
@@ -106,51 +96,41 @@ while True:
     # cv2.waitKey(100)
 
 
-    # 提取蓝色轮廓
+    # 提取蓝色轮廓 -- 并过滤
     contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours_blue = filtered_contours(contours)
-    # print(len(filtered_contours_blue))
-    # draw_contour(filtered_contours_blue)
 
     # 计算蓝色圆心间的像素距离和距离像素比
-
     if len(filtered_contours_blue) >= 2:
         # print(len(filtered_contours_blue))
-        # cv2.contourArea(contour)
+        # 计算圆心和半径
         (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_blue[0])
         center1 = [int(x1), int(y1)]
-        # center1 = np.array(contours[0][0][0])
         (x2, y2), radius2 = cv2.minEnclosingCircle(filtered_contours_blue[1])
         center2 = [int(x2), int(y2)]
-        # center2 = np.array(contours[1][0][0])
 
-        # 绘制轮廓的外接圆
-        cv2.circle(image, center1, int(radius1), (0, 255, 0), 2)
-        cv2.circle(image, center2, int(radius2), (0, 255, 0), 2)
+        # 绘制轮廓的外接圆--黑色
+        cv2.circle(image, center1, int(radius1), (0, 0, 0), 2)
+        cv2.circle(image, center2, int(radius2), (0, 0, 0), 2)
 
-        # 绘制圆心
-        cv2.circle(image, center1, 2, (0, 0, 255), -1)
-        cv2.circle(image, center2, 2, (0, 0, 255), -1)
+        # 绘制圆心 -- 红色
+        cv2.circle(image, center1, 5, (0, 0, 255), -1)
+        cv2.circle(image, center2, 5, (0, 0, 255), -1)
 
-        # 绘制轮廓
-        cv2.drawContours(image, contours, -1, (0, 0, 0), 5)
+        # 绘制轮廓 -- 蓝色
+        cv2.drawContours(image, contours,-1, (255, 0, 0), 5)
+
         # 计算距离
         result = [x1 - x2, y1 - y2]
         distance = np.linalg.norm(result)
         dis_pix_ratio = stand_dis / distance
         # print("蓝色圆心间的距离为：", distance)
         # print("距离像素比--dis_pix_ratio", dis_pix_ratio)
-        # # 显示帧
-        # cv2.imshow('Frame', image)
         
-        # # 按下'q'键退出
-        # if cv2.waitKey(0) & 0xFF == ord('q'):
-        #     break
+    ############# 处理红色点 ####################
 
     # 定义红色区域的HSV范围
 
-    # lower_red = lower
-    # upper_red = upper
     lower_red = np.array([42, 103, 230])
     upper_red = np.array([78, 198, 255])
     mask = cv2.inRange(hsv, lower_red, upper_red)
@@ -163,38 +143,36 @@ while True:
     # 提取红色轮廓
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     filtered_contours_red = filtered_contours(contours)
-    # draw_contour(filtered_contours_red)
-    # print(len(filtered_contours_red))
 
 
     # 计算红色圆心间像素距离和实际距离
     if len(filtered_contours_red) >= 2:
         # print(len(filtered_contours_red))
-        # cv2.contourArea(contour)
+        # 计算圆心和半径
         (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_red[0])
         center1 = [int(x1), int(y1)]
-        # center1 = np.array(contours[0][0][0])
         (x2, y2), radius2 = cv2.minEnclosingCircle(filtered_contours_red[1])
         center2 = [int(x2), int(y2)]
-        # center2 = np.array(contours[1][0][0])
 
-        # 绘制轮廓的外接圆
-        cv2.circle(image, center1, int(radius1), (0, 255, 0), 2)
-        cv2.circle(image, center2, int(radius2), (0, 255, 0), 2)
+        # 绘制轮廓的外接圆--黑色
+        cv2.circle(image, center1, int(radius1), (0, 0, 0), 2)
+        cv2.circle(image, center2, int(radius2), (0, 0, 0), 2)
 
-        # 绘制圆心
-        cv2.circle(image, center1, 2, (0, 0, 255), -1)
-        cv2.circle(image, center2, 2, (0, 0, 255), -1)
+        # 绘制圆心 -- 红色
+        cv2.circle(image, center1, 5, (0, 0, 255), -1)
+        cv2.circle(image, center2, 5, (0, 0, 255), -1)
 
-        # 绘制轮廓
-        cv2.drawContours(image, contours, -1, (0, 0, 0), 5)
+        # 绘制轮廓 -- 蓝色
+        cv2.drawContours(image, contours,-1, (255, 0, 0), 5)
         # 计算距离
         result = [x1 - x2, y1 - y2]
         distance = np.linalg.norm(result)
         dis_meas.append(distance*dis_pix_ratio)
+        
         # print("红色圆心间的像素距离：", distance)
         # print("红色圆心间的实际距离：", distance * dis_pix_ratio)
         # print("----------------------------")
+
         # # 显示帧
         # cv2.imshow('Frame', image)
         
@@ -209,11 +187,11 @@ cv2.destroyAllWindows()
 plt.plot(dis_meas)
 
 # 设置 x 轴和 y 轴的标签
-plt.xlabel('帧')
-plt.ylabel('测量长度')
+plt.xlabel('frame')
+plt.ylabel('length/mm')
 
 # 设置图像标题
-plt.title("长度测量值")
+plt.title("monocular_length_measurement")
 
 # 显示图像
 plt.show()
