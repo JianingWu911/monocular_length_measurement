@@ -26,7 +26,7 @@ def draw_contour(contours):
 def empty(i):
     pass
 
-def choose_contours(contours) :
+def filtered_contours(contours) :
     # 设置面积阈值
     area_threshold = 500  # 可根据需求调整
 
@@ -71,19 +71,6 @@ while True:
 
     # 如果没有轮廓 终止
     if not ret:
-        # 绘制曲线
-
-        plt.plot(dis_meas)
-
-        # 设置 x 轴和 y 轴的标签
-        plt.xlabel('帧')
-        plt.ylabel('测量长度')
-
-        # 设置图像标题
-        plt.title("长度测量值")
-
-        # 显示图像
-        plt.show()
         print("没有输入，结束")
         break
     
@@ -115,24 +102,50 @@ while True:
     mask_blue = cv2.medianBlur(mask_blue, 5)
 
     # 在原图上绘制蓝色区域
-    cv2.imshow('Mask_blue', mask_blue)
-    cv2.waitKey(100)
+    # cv2.imshow('Mask_blue', mask_blue)
+    # cv2.waitKey(100)
 
 
     # 提取蓝色轮廓
     contours, _ = cv2.findContours(mask_blue, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours_blue = choose_contours(contours)
+    filtered_contours_blue = filtered_contours(contours)
     # print(len(filtered_contours_blue))
-    draw_contour(filtered_contours_blue)
+    # draw_contour(filtered_contours_blue)
 
     # 计算蓝色圆心间的像素距离和距离像素比
+
     if len(filtered_contours_blue) >= 2:
-        center1 = np.array(filtered_contours_blue[0][0][0])
-        center2 = np.array(filtered_contours_blue[1][0][0])
-        distance = np.linalg.norm(center1 - center2)
+        # print(len(filtered_contours_blue))
+        # cv2.contourArea(contour)
+        (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_blue[0])
+        center1 = [int(x1), int(y1)]
+        # center1 = np.array(contours[0][0][0])
+        (x2, y2), radius2 = cv2.minEnclosingCircle(filtered_contours_blue[1])
+        center2 = [int(x2), int(y2)]
+        # center2 = np.array(contours[1][0][0])
+
+        # 绘制轮廓的外接圆
+        cv2.circle(image, center1, int(radius1), (0, 255, 0), 2)
+        cv2.circle(image, center2, int(radius2), (0, 255, 0), 2)
+
+        # 绘制圆心
+        cv2.circle(image, center1, 2, (0, 0, 255), -1)
+        cv2.circle(image, center2, 2, (0, 0, 255), -1)
+
+        # 绘制轮廓
+        cv2.drawContours(image, contours, -1, (0, 0, 0), 5)
+        # 计算距离
+        result = [x1 - x2, y1 - y2]
+        distance = np.linalg.norm(result)
         dis_pix_ratio = stand_dis / distance
-        print("蓝色圆心间的距离为：", distance)
-        print("距离像素比--dis_pix_ratio", dis_pix_ratio)
+        # print("蓝色圆心间的距离为：", distance)
+        # print("距离像素比--dis_pix_ratio", dis_pix_ratio)
+        # # 显示帧
+        # cv2.imshow('Frame', image)
+        
+        # # 按下'q'键退出
+        # if cv2.waitKey(0) & 0xFF == ord('q'):
+        #     break
 
     # 定义红色区域的HSV范围
 
@@ -143,43 +156,66 @@ while True:
     mask = cv2.inRange(hsv, lower_red, upper_red)
 
 
-    cv2.imshow('Mask', mask)
-    cv2.waitKey(100)
+    # cv2.imshow('Mask', mask)
+    # cv2.waitKey(100)
 
 
     # 提取红色轮廓
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filtered_contours_red = choose_contours(contours)
-    draw_contour(filtered_contours_red)
+    filtered_contours_red = filtered_contours(contours)
+    # draw_contour(filtered_contours_red)
     # print(len(filtered_contours_red))
 
 
     # 计算红色圆心间像素距离和实际距离
-    if len(contours) >= 2:
-        print(len(contours))
+    if len(filtered_contours_red) >= 2:
+        # print(len(filtered_contours_red))
         # cv2.contourArea(contour)
-        (x1, y1), radius = cv2.minEnclosingCircle(contours[0])
+        (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_red[0])
         center1 = [int(x1), int(y1)]
         # center1 = np.array(contours[0][0][0])
-        (x2, y2), radius = cv2.minEnclosingCircle(contours[1])
+        (x2, y2), radius2 = cv2.minEnclosingCircle(filtered_contours_red[1])
         center2 = [int(x2), int(y2)]
         # center2 = np.array(contours[1][0][0])
+
+        # 绘制轮廓的外接圆
+        cv2.circle(image, center1, int(radius1), (0, 255, 0), 2)
+        cv2.circle(image, center2, int(radius2), (0, 255, 0), 2)
+
+        # 绘制圆心
         cv2.circle(image, center1, 2, (0, 0, 255), -1)
         cv2.circle(image, center2, 2, (0, 0, 255), -1)
+
+        # 绘制轮廓
+        cv2.drawContours(image, contours, -1, (0, 0, 0), 5)
+        # 计算距离
         result = [x1 - x2, y1 - y2]
         distance = np.linalg.norm(result)
         dis_meas.append(distance*dis_pix_ratio)
-        print("红色圆心间的像素距离：", distance)
-        print("红色圆心间的实际距离：", distance * dis_pix_ratio)
-        print("----------------------------")
-        # 显示帧
-        cv2.imshow('Frame', image)
+        # print("红色圆心间的像素距离：", distance)
+        # print("红色圆心间的实际距离：", distance * dis_pix_ratio)
+        # print("----------------------------")
+        # # 显示帧
+        # cv2.imshow('Frame', image)
         
-        # 按下'q'键退出
-        if cv2.waitKey(0) & 0xFF == ord('q'):
-            break
+        # # 按下'q'键退出
+        # if cv2.waitKey(0) & 0xFF == ord('q'):
+        #     break
 
-    # 释放视频和关闭窗口
 cap.release()
 cv2.destroyAllWindows()
+
+# 绘制曲线
+plt.plot(dis_meas)
+
+# 设置 x 轴和 y 轴的标签
+plt.xlabel('帧')
+plt.ylabel('测量长度')
+
+# 设置图像标题
+plt.title("长度测量值")
+
+# 显示图像
+plt.show()
+# 释放视频和关闭窗口
 
