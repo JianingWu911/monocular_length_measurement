@@ -8,6 +8,8 @@ dis_pix_ratio = 0
 
 # 用来记录最终数据--每一帧中红色点间的实际长度
 dis_meas = []
+all_frame_cnt = 0
+useful_frame_cnt = 0
 
 # 调试阈值用
 # def empty(i):
@@ -16,7 +18,7 @@ dis_meas = []
 # 过滤面积较小的轮廓
 def filtered_contours(contours) :
     # 设置面积阈值
-    area_threshold = 500  # 可根据需求调整
+    area_threshold = 20  # 可根据需求调整
 
     # 新建一个列表，用于存储面积大于阈值的轮廓
     filtered_contours = []
@@ -32,7 +34,7 @@ def filtered_contours(contours) :
     return filtered_contours
 
 # 载入视频
-cap = cv2.VideoCapture('test.MP4')
+cap = cv2.VideoCapture('test2.MP4')
 
 # # 调试用代码找到合适的阈值，用来产生控制滑条
 # cv2.namedWindow("HSV")
@@ -46,11 +48,12 @@ cap = cv2.VideoCapture('test.MP4')
 
 # # 帧率计数器
 # frame_cnt = 0
-# N = 100
+# N = 10
 
 while True:
     # 读取视频帧
     ret, frame = cap.read()
+    all_frame_cnt += 1
 
     # # 帧计数器
     # frame_cnt += 1
@@ -147,6 +150,7 @@ while True:
 
     # 计算红色圆心间像素距离和实际距离
     if len(filtered_contours_red) >= 2:
+        useful_frame_cnt += 1
         # print(len(filtered_contours_red))
         # 计算圆心和半径
         (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_red[0])
@@ -173,15 +177,42 @@ while True:
         # print("红色圆心间的实际距离：", distance * dis_pix_ratio)
         # print("----------------------------")
 
-        # # 显示帧
+        # 显示帧
         # cv2.imshow('Frame', image)
         
         # # 按下'q'键退出
         # if cv2.waitKey(0) & 0xFF == ord('q'):
         #     break
 
+
+    # 如果没有捕捉到轮廓，append 0，记为无效帧
+    else :
+        dis_meas.append(0)
+
 cap.release()
 cv2.destroyAllWindows()
+
+print('all frame :', all_frame_cnt)
+print('useful frame :', useful_frame_cnt)
+
+# 插值出无效帧
+# 找到非零值的索引
+nonzero_indices = np.nonzero(dis_meas)[0]
+
+# 循环遍历非零值索引，进行线性插值
+for i in range(len(nonzero_indices)-1):
+    start_index = nonzero_indices[i]
+    end_index = nonzero_indices[i+1]
+    start_value = dis_meas[start_index]
+    end_value = dis_meas[end_index]
+
+    # 计算插值步长
+    step = (end_value - start_value) / (end_index - start_index)
+
+    # 对零值进行插值
+    for j in range(start_index+1, end_index):
+        dis_meas[j] = start_value + step * (j - start_index)
+
 
 # 绘制曲线
 plt.plot(dis_meas)
@@ -196,4 +227,6 @@ plt.title("monocular_length_measurement")
 # 显示图像
 plt.show()
 # 释放视频和关闭窗口
+
+
 
