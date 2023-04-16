@@ -32,15 +32,20 @@ upper_red = upper
 ~~~
 
 # 使用方法
-- 修改程序第6行stand_dis 为两蓝色点的实际间距
-- 修改视频名为test.MP4
-- 通过注释程序调整合适的阈值
-- 命令行使用 
-  
-  python distance.py
+## 先调用config_adj.py 
+使用下面命令，调整滑条，找到合适的值
+- 调整蓝点参数
 
+  python config_adj.py [视频文件名] blue 
+- 调整红点参数
+
+  python config_adj.py [视频文件名] red
+## 后调用distance获取长度
+python distance.py [视频文件名] [基准长度]
 # 修改帧率
 - 通过帧率计数器调整帧率
 
 # 待改进
 - 将调整阈值设置为必须进行的一步，然后将调整好的值直接设置为需要的阈值
+- 基准长度可以作为参数传入
+- 读取文件可以作为传入参数
