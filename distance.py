@@ -13,12 +13,12 @@ useful_frame_cnt = 0
 
 # 调试阈值用
 # def empty(i):
-    # pass
+#     pass
 
 # 过滤面积较小的轮廓
 def filtered_contours(contours) :
     # 设置面积阈值
-    area_threshold = 20  # 可根据需求调整
+    area_threshold = 100  # 可根据需求调整
 
     # 新建一个列表，用于存储面积大于阈值的轮廓
     filtered_contours = []
@@ -34,17 +34,17 @@ def filtered_contours(contours) :
     return filtered_contours
 
 # 载入视频
-cap = cv2.VideoCapture('test2.MP4')
+cap = cv2.VideoCapture('test6.MP4')
 
 # # 调试用代码找到合适的阈值，用来产生控制滑条
 # cv2.namedWindow("HSV")
 # cv2.resizeWindow("HSV", 640, 300)
-# cv2.createTrackbar("HUE Min", "HSV", 0, 179, empty)
+# cv2.createTrackbar("HUE Min", "HSV", 10, 179, empty)
 # cv2.createTrackbar("SAT Min", "HSV", 0, 255, empty)
-# cv2.createTrackbar("VALUE Min", "HSV", 230, 255, empty)
-# cv2.createTrackbar("HUE Max", "HSV", 78, 179, empty)
-# cv2.createTrackbar("SAT Max", "HSV", 190, 255, empty)
-# cv2.createTrackbar("VALUE Max", "HSV", 255, 255, empty)
+# cv2.createTrackbar("VALUE Min", "HSV", 111, 255, empty)
+# cv2.createTrackbar("HUE Max", "HSV", 77, 179, empty)
+# cv2.createTrackbar("SAT Max", "HSV", 183, 255, empty)
+# cv2.createTrackbar("VALUE Max", "HSV", 209, 255, empty)
 
 # # 帧率计数器
 # frame_cnt = 0
@@ -85,8 +85,8 @@ while True:
     ############# 处理蓝色点 ####################
 
     # 定义蓝色的HSV范围-- 可以用上面的注释的代码调参数
-    lower_blue = np.array([44, 63, 86])
-    upper_blue = np.array([81, 210, 209])
+    lower_blue = np.array([10, 0, 111])
+    upper_blue = np.array([77, 183, 209])
 
     # 生成蓝色区域的遮罩
     mask_blue = cv2.inRange(hsv, lower_blue, upper_blue)
@@ -95,8 +95,8 @@ while True:
     mask_blue = cv2.medianBlur(mask_blue, 5)
 
     # 在原图上绘制蓝色区域
-    # cv2.imshow('Mask_blue', mask_blue)
-    # cv2.waitKey(100)
+    cv2.imshow('Mask_blue', mask_blue)
+    cv2.waitKey(1)
 
 
     # 提取蓝色轮廓 -- 并过滤
@@ -104,7 +104,7 @@ while True:
     filtered_contours_blue = filtered_contours(contours)
 
     # 计算蓝色圆心间的像素距离和距离像素比
-    if len(filtered_contours_blue) >= 2:
+    if len(filtered_contours_blue) == 2:
         # print(len(filtered_contours_blue))
         # 计算圆心和半径
         (x1, y1), radius1 = cv2.minEnclosingCircle(filtered_contours_blue[0])
@@ -129,18 +129,22 @@ while True:
         dis_pix_ratio = stand_dis / distance
         # print("蓝色圆心间的距离为：", distance)
         # print("距离像素比--dis_pix_ratio", dis_pix_ratio)
+
+    # 如果不是两个点，不更新，用上一次的dis_pix_ratio
         
     ############# 处理红色点 ####################
 
     # 定义红色区域的HSV范围
 
-    lower_red = np.array([42, 103, 230])
-    upper_red = np.array([78, 198, 255])
+    lower_red = np.array([76, 108, 170])
+    upper_red = np.array([102, 207, 255])
+    # lower_red = lower
+    # upper_red = upper
     mask = cv2.inRange(hsv, lower_red, upper_red)
 
 
-    # cv2.imshow('Mask', mask)
-    # cv2.waitKey(100)
+    cv2.imshow('Mask', mask)
+    cv2.waitKey(1)
 
 
     # 提取红色轮廓
@@ -149,7 +153,7 @@ while True:
 
 
     # 计算红色圆心间像素距离和实际距离
-    if len(filtered_contours_red) >= 2:
+    if len(filtered_contours_red) == 2:
         useful_frame_cnt += 1
         # print(len(filtered_contours_red))
         # 计算圆心和半径
@@ -172,20 +176,22 @@ while True:
         result = [x1 - x2, y1 - y2]
         distance = np.linalg.norm(result)
         dis_meas.append(distance*dis_pix_ratio)
+        if distance*dis_pix_ratio >500 :
+            cv2.waitKey(0)
         
         # print("红色圆心间的像素距离：", distance)
         # print("红色圆心间的实际距离：", distance * dis_pix_ratio)
         # print("----------------------------")
 
-        # 显示帧
+        # # 显示帧
         # cv2.imshow('Frame', image)
         
-        # # 按下'q'键退出
-        # if cv2.waitKey(0) & 0xFF == ord('q'):
-        #     break
+        # 按下'q'键退出
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 
-    # 如果没有捕捉到轮廓，append 0，记为无效帧
+    # 如果没有捕捉到轮廓或轮廓多余两个，append 0，记为无效帧
     else :
         dis_meas.append(0)
 
