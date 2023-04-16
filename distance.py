@@ -10,7 +10,7 @@ import my_module
 
 # 获取命令行参数
 filename = sys.argv[1] # 视频文件名
-stand_dis = int(sys.argv[2]) # 基准长度 单位 m
+stand_dis = float(sys.argv[2]) # 基准长度 单位 m
 dis_pix_ratio = 0
 
 # 用来记录最终数据--每一帧中红色点间的实际长度
@@ -156,8 +156,8 @@ t = t / fps
 plt.plot(t, dis_meas)
 
 # 设置 x 轴和 y 轴的标签
-plt.xlabel('frame')
-plt.ylabel('length/mm')
+plt.xlabel('t')
+plt.ylabel('length')
 
 # 设置图像标题
 plt.title("monocular_length_measurement")
