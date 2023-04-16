@@ -94,9 +94,9 @@ while True:
     # 对遮罩进行中值滤波以去噪
     mask_blue = cv2.medianBlur(mask_blue, 5)
 
-    # 在原图上绘制蓝色区域
-    cv2.imshow('Mask_blue', mask_blue)
-    cv2.waitKey(1)
+    # # 在原图上绘制蓝色区域
+    # cv2.imshow('Mask_blue', mask_blue)
+    # cv2.waitKey(1)
 
 
     # 提取蓝色轮廓 -- 并过滤
@@ -143,8 +143,8 @@ while True:
     mask = cv2.inRange(hsv, lower_red, upper_red)
 
 
-    cv2.imshow('Mask', mask)
-    cv2.waitKey(1)
+    # cv2.imshow('Mask', mask)
+    # cv2.waitKey(1)
 
 
     # 提取红色轮廓
@@ -186,9 +186,9 @@ while True:
         # # 显示帧
         # cv2.imshow('Frame', image)
         
-        # 按下'q'键退出
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # # 按下'q'键退出
+        # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     break
 
 
     # 如果没有捕捉到轮廓或轮廓多余两个，append 0，记为无效帧
